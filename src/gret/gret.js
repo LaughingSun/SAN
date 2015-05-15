@@ -182,13 +182,11 @@ function _search ( input, index, endIndex ) {
 }
 
 /**
- * match[0] or null - returns an array of all matches, like php's matchall, but 
- * without the second element level of indexes which are included normally as 
- * per javascript regex matched array, fe:
+ * match, an Array of all matches('g' flag) or null - when using the 'g' flag it
+ * returns an array of all matches, fe:
  *  [ ["the whole string", "the", index: 0, lastIndex: 3],
  *    ["the whole string", "whole", index: 4, lastIndex: 9],
- *    ["the whole string", "string", index: 10, lastIndex: 16],
- *    index: 0, lastIndex: 16]
+ *    ["the whole string", "string", index: 10, lastIndex: 16] ]
  */
 function _match ( input, index, endIndex ) {
   throw new Error('not yet supported, but it will be within days, check back soon')
