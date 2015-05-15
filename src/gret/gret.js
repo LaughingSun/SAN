@@ -33,7 +33,10 @@ var FLAG_PROP_MAP = {
       "u": { flag:"u", index: 7, native: false, name: "unicode" }
     },
     REGEX_FLAGS   = new RegExp(["\\/([", Object.keys(FLAG_PROP_MAP).join(''), "]*)$"].join('')),
-    PREPREGEXP  = /\\(?!k).|\((\?<(\w+)>|\?P<(\w+)>|(?!\?[:!=]))|\\k<(\w+)>|\\k'(\w+)'/g;
+    PREP_REGEXP  = /\\(?!k).|\((\?<(\w+)>|\?P<(\w+)>|(?!\?[:!=]))|\\k<(\w+)>|\\k'(\w+)'/g,
+    CONF_LIB = 'conf/',
+    CLEAN_EXT = '.clean.json',
+    REPLACER_EXT = '.replacer.json';
 
 function _checkFlags (flags, unsupported) {
   if ( flags ) {
@@ -125,11 +128,11 @@ function _compileSource(source, flags, namedIndexes) {
   }
   chain = [];
   ci = 1;
-  PREPREGEXP.lastIndex = pi = 0;
-  while ( (m = PREPREGEXP.exec(source)) ) {
+  PREP_REGEXP.lastIndex = pi = 0;
+  while ( (m = PREP_REGEXP.exec(source)) ) {
 //    console.log( source, pi, m );
     chain.push(source.slice(pi,m.index));  // add preceeding part
-    pi = PREPREGEXP.lastIndex;
+    pi = PREP_REGEXP.lastIndex;
     if ( (t = m[2]) ) {         // namedIndexes capture
       namedIndexes[t] = ci;
       chain.push('(');
@@ -179,7 +182,13 @@ function _search ( input, index, endIndex ) {
 }
 
 /**
- * match[0] or null
+ * match[0] or null - returns an array of all matches, like php's matchall, but 
+ * without the second element level of indexes which are included normally as 
+ * per javascript regex matched array, fe:
+ *  [ ["the whole string", "the", index: 0, lastIndex: 3],
+ *    ["the whole string", "whole", index: 4, lastIndex: 9],
+ *    ["the whole string", "string", index: 10, lastIndex: 16],
+ *    index: 0, lastIndex: 16]
  */
 function _match ( input, index, endIndex ) {
   throw new Error('not yet supported, but it will be within days, check back soon')
@@ -199,17 +208,32 @@ function _exec ( input, index, endIndex ) {
 /**
  * string
  */
-function _replace ( input, replace, index, endIndex ) {
+function _replace ( input, replacer, index, endIndex ) {
   throw new Error('not yet supported, but it will be within days, check back soon')
 }
 
-/**
+/** this is a class method, not an instance method
  * string (this does a predefined replace with options
  */
-function _clean ( input, type, options, index, endIndex ) {
-  throw new Error('not yet supported, but it will be within days, check back soon')
+var _cleanConfCache = {};
+function _loadCleaner ( name, options ) {
+  var conf, gret, replacer;
+  if ( name in _cleanConfCache )
+    gret = _cleanConfCache[name];
+  else {
+    conf = require([CONF_LIB, name, CLEAN_EXT].join(''));
+    gret = new Gret(conf.source, conf.flags);
+    gret.replacer = replacer = conf.replacer_file
+        ? require([CONF_LIB, name, REPLACER_EXT].join(''))
+        : conf.replacer;
+    _cleanConfCache[name] = gret;
+    if ( replacer.configure instanceof Function )
+      replace.configure( conf, options );
+    return function(input, index, endIndex){
+      return gret.replace.call(gret, input, replacer, index, endIndex);
+    };
+  }
 }
-
 
 function Gret (source, flags) {
   var _source,
@@ -266,8 +290,7 @@ Gret.prototype = Object.create(RegExp.prototype, {
   search: { value: _search },   // index or -1
   match:  { value: _match },    // match[0] or null
   exec:   { value: _exec },     // match array
-  replace:{ value: _replace },  // string
-  clean:  { value: _clean }     // string (this does a predefined replace with options
+  replace:{ value: _replace }   // string
 });
 Gret.prototype.constructor = Gret;
 Object.defineProperties(Gret, {
@@ -285,39 +308,9 @@ Object.defineProperties(Gret, {
         if ( FLAG_PROP_MAP[k].settable )
           flags.push(k);
       return flags.join('');
-  })() }
+  })() },
+  loadCleaner:  { value: _loadCleaner }     // string (this does a predefined replace with options
 });
 
 
-
-function test ( g ) {
-  console.log(g);
-  console.log('Is g an instance of Gret? ' + (g instanceof Gret)); // true
-  console.log('Is g an instance of RegExp? ' + (g instanceof RegExp)); // true
-  console.log('g.source? '+g.source);
-  console.log('g.flags? '+g.flags);
-  console.log('g.native? '+g.native);
-  console.log('g.input? '+g.input);
-  console.log('g.index? '+g.index);
-  console.log('g.endIndex? '+g.endIndex);
-  console.log('g.lastIndex? '+g.lastIndex);
-  console.log('g.toString()? '+g.toString());
-  console.log('g.test(r.toString())? '+g.test(g.toString()));
-}
-
-var r = /^\/((?:[^\\\/]+|\\.)*)\/(\w*)$/,
-    v;
-console.log(Gret);
-console.log('Gret.SETTABLEFLAGS', Gret.SETTABLEFLAGS);
-console.log('Gret.SUPPORTEDFLAGS', Gret.SUPPORTEDFLAGS);
-
-test( r );
-test( new Gret(r.source) );
-test( new Gret(r.source, 'y') );
-test( new Gret(r.source, 'g') );
-test( new Gret(r.source, Gret.SETTABLEFLAGS) );
-test( new Gret(r.source, Gret.SUPPORTEDFLAGS) );
-test( r = new Gret('(?<word>\\w+)', Gret.SUPPORTEDFLAGS) );
-do {
-  console.log( 'v = r.exec("Every day I write the book.")', v = r.exec("Every day I write the book.") );
-} while (v);
+module.exports = Gret;
