@@ -23,22 +23,23 @@
  */
 
 /* TODOS:
- * 
- * y flags uses (?:.{{original}}|([^]), no y flag uses original
- * changing y flag shoudl re-compile the regex
+ * add: non-native n, s, x and u
  */
 var FLAG_PROP_MAP = {
       "g": { flag:"g", native: false, name: "global", force: true },
       "i": { flag:"i", native: true , name: "ignoreCase"},
-      "m": { flag:"m", native: true , name: "multi"},
+      "m": { flag:"m", native: true , name: "multiline"},
       "n": { flag:"n", native: false, name: "nameOnly" },
-      "s": { flag:"s", native: false, name: "stupid" },
+      "s": { flag:"s", native: false, name: "dotAll" },
       "x": { flag:"x", native: false, name: "extended" },
       "y": { flag:"y", native: false, name: "sticky" },
       "u": { flag:"u", native: false, name: "unicode" }
     },
     REGEX_FLAGS   = new RegExp(["\\/(\w*)$"].join('')),
-    PREP_REGEXP  = /\\(?!k).|\((\?<(\w+)>|\?P<(\w+)>|(?!\?[:!=]))|\\k<(\w+)>|\\k'(\w+)'/g,
+//    PREP_REGEXP   = /\\(?!k).|\((\?<(\w+)>|\?P<(\w+)>|(?!\?[:!=]))|\\k<(\w+)>|\\k'(\w+)'/g,
+    PREP_REGEXP   = /\\(?!k).|\((?:\?<(\w+)>|\?P<(\w+)>|\?P=(\w+)\)|(?!\?[:!=]))|\\k<(\w+)>|\\k'(\w+)'/g,
+    //                        backref 0-99             backref   named    named          named
+    PREP_REPLACER = /[\$\\](?:((?:0|[1-9]\d?)(?!\d))|\{(\d+)\}|k<(\w+)>|k'(\w+)')|\(\?P=?(\w+)\)/g,
     CONF_LIB = 'conf/',
     CLEAN_EXT = '.clean.json',
     REPLACER_EXT = '.replacer.json',
@@ -76,9 +77,7 @@ function _method_prep ( input, startIndex, endIndex ) {
     this.startIndex = startIndex;
   if ( endIndex != null )
     this.endIndex = endIndex;
-  if ( ! this.global )
-    this.lastIndex = this.startIndex;
-  regex.lastIndex = Max(this.startIndex, this.lastIndex);
+  regex.lastIndex = this.global && this.index >= 0 ? this.lastIndex : this.startIndex;
   return regex
 //  console.log( '_method_prep', regex,  regex.lastIndex, this.input, this.startIndex, this.endIndex, this.lastIndex );
 }
@@ -103,10 +102,15 @@ function __exec__ ( native ) {
       && matched.index < endIndex
       && ( ! this.sticky || matched.pop() === undefined) ) {
     matched.named = _getNamedCaptures( matched, native.namedIndexes );
+    this.lastIndex = native.lastIndex;
+    this.index = matched.index;
   } else {
+//    console.log(matched);
     matched = null;
+    this.lastIndex = this.startIndex;
+    this.index = -1;
   }
-  this.lastIndex = native.lastIndex;
+//  this.lastIndex = Max(this.startIndex, native.lastIndex);
   return matched;
 }
 
@@ -114,21 +118,21 @@ function __exec__ ( native ) {
  * match array
  */
 function _exec ( input, startIndex, endIndex ) {
-  return __exec__(_method_prep.call(this, input, startIndex, endIndex));
+  return __exec__.call(this, _method_prep.call(this, input, startIndex, endIndex));
 }
 
 /**
  * true or false
  */
 function _test ( input, startIndex, endIndex ) {
-  return !! __exec__(_method_prep.call(this, input, startIndex, endIndex));
+  return !! __exec__.call(this, _method_prep.call(this, input, startIndex, endIndex));
 }
 
 /**
  * index or -1
  */
 function _search ( input, startIndex, endIndex ) {
-  var matched = __exec__(_method_prep.call(this, input, startIndex, endIndex));
+  var matched = __exec__.call(this, _method_prep.call(this, input, startIndex, endIndex));
   return matched ? matched.index : -1;
 }
 
@@ -145,19 +149,111 @@ function _match ( input, startIndex, endIndex ) {
       g = this.global,
       m;
   do {
-    if ( (m = __exec__(native)) )
+    if ( (m = __exec__.call(this, native)) )
       matched.push( m );
   } while( g && m );
   if ( matched.length )
-    return g ? matched[0] : matched;
+    return g ? matched : matched[0];
   return null;
+}
+
+var _replacerCache = {};
+function _compileReplacer (replacer) {
+  var chain, ci,
+      m, t;
+  if ( replacer in _replacerCache )
+    return _replacerCache[replacer];
+  chain = [];
+  props = {};
+  PREP_REPLACER.lastIndex = ci = 0;
+  while ( (m = PREP_REPLACER.exec(replacer)) ) {
+    (ci < m.index) && chain.push(JSON.stringify(replacer.slice(ci, m.index)));
+    ci = PREP_REPLACER.lastIndex;
+    //         backref 0-99      backref   named    named          named
+    //(?:[\$\\](\d{1,2}(?!\d))|\{(\d+)\}|k<(\w+)>|k'(\w+)')|\(\?P=?(\w+)\)/g,
+    if ( (t = m[1] || m[2]) )       // backref(numeric)
+      chain.push(['matched[',t,']'].join(''));
+    else if ( (t = m[3] || m[4] || [5]) )  // named
+      chain.push(['named[',JSON.stringify(t),']'].join(''));
+    else
+      throw new Error(['could nto compile ', JSON.stringify(m[0]), ' at ', m.index, ' in ', JSON.stringify(replacer), ', this shoudl never happen'].join(''));
+  }
+  (ci < replacer.length) && chain.push(JSON.stringify(replacer.slice(ci)));
+  return _replacerCache[replacer] = new Function('matched, named', ['return [', chain.join(), '].join(\'\')'].join(''))
 }
 
 /**
  * string
  */
-function _replace ( input, replacer, index, endIndex ) {
-  throw new Error('not yet supported, but it will be within days, check back soon')
+function _replace ( input, replacer, startIndex, endIndex ) {
+  var native = _method_prep.call(this, input, startIndex, endIndex),
+      result = [],
+      g = this.global,
+      ci = 0,
+      m;
+  (replacer instanceof Function) || (replacer = _compileReplacer(replacer))
+  do {
+    if ( (m = __exec__.call(this, native)) ) {
+      result.push( input.slice(ci, m.index));
+      result.push( replacer( m, m.named ) );
+      ci = native.lastIndex;
+    }
+  } while( g && m );
+  result.push( input.slice(ci));
+  return result.join('');
+}
+
+/**
+ * filter
+ * 
+ * identical to replace() except only the matches are return
+ */
+function _filter ( input, replacer, startIndex, endIndex ) {
+  var native = _method_prep.call(this, input, startIndex, endIndex),
+      result = [],
+      g = this.global,
+      m;
+  (replacer instanceof Function) || (replacer = _compileReplacer(replacer))
+  do {
+    if ( (m = __exec__.call(this, native)) ) {
+      result.push( replacer( m, m.named ) );
+    }
+  } while( g && m );
+  return result.join('');
+}
+
+/*
+ * split
+ * 
+ * Split the given string by a regular expression.
+ * 
+ * @param {string}  input - The input string.
+ * @param {int}     start - start position.
+ * @param {int}     end   - end position
+ * @param {int}     limit - only substrings up to limit are captureed
+ * @param {boolean} delim - parenthesized expression in the delimiter pattern will be captured and returned as well
+ * @returns {Array} 
+ */
+function _split ( input, startIndex, endIndex, limit, delimCapture ) {
+  var native = _method_prep.call(this, input, startIndex, endIndex),
+      result = [],
+      ci = this.startIndex,
+      i = 0,
+      m;
+  do {
+    if ( (m = __exec__.call(this, native)) && m.index < this.endIndex ) {
+      result.push( input.slice(ci, m.index));
+      if ( delimCapture )
+        result.push( m[0] );
+      ci = native.lastIndex;
+    } else {
+      m = null;
+      this.lastIndex = this.startIndex;
+      this.index = -1;
+    }
+  } while( m && (limit == null || ++i < limit) );
+  result.push( input.slice(ci, this.endIndex));
+  return result;
 }
 
 /** this is a class method, not an instance method
@@ -213,11 +309,12 @@ function _compileSource(source, flags) {
   while ( (m = PREP_REGEXP.exec(source)) ) {
     chain.push(source.slice(pi,m.index));  // add preceeding part
     pi = PREP_REGEXP.lastIndex;
-    if ( (t = m[2]) ) {         // namedIndexes capture
+    // PREP_REGEXP   = /\\(?!k).|\((?:\?<(\w+)>|\?P<(\w+)>|\?P=(\w+)\)|(?!\?[:!=]))|\\k<(\w+)>|\\k'(\w+)'/g,
+    if ( (t = m[1] || m[2]) ) {         // namedIndexes capture
       namedIndexes[t] = ci;
       chain.push('(');
       ci++;
-    } else if ( (t = m[4] || m[5] || m[6]) ) {  // namedIndexes backreference
+    } else if ( (t = m[3] || m[4] || m[5]) ) {  // namedIndexes backreference
       if ( ! namedIndexes[t] )
         throw new Error(['no such namedIndexes back reference "', t, '"'].join(''));
       chain.push('\\', namedIndexes[t]);
@@ -232,53 +329,16 @@ function _compileSource(source, flags) {
   return (this.native = _regexCache[key] = regex);
 }
 
-function _defineSettablePropFlag() {
-  var _flags = Array(Object.keys(FLAG_PROP_MAP).length),
-      i, k;
-  // add flags property
-  Object.defineProperty(this, 'flags', {
-    get: function () {
-      return _flags.join('');
-    },
-    set: function (flags) {
-      var i = -1,
-          k, s;
-      flags || (flags = '');
-      for (k in FLAG_PROP_MAP) {
-        if ( (s = (flags.indexOf(k) >= 0) ? k : undefined) !== _flags[++i] ) {
-          _flags[i] = s;
-          this.dirty = true;
-        }
-      }
-      _checkFlags(flags);
-    },
-    enumerable: true
-  });
-  i = -1;
-  for (k in FLAG_PROP_MAP) {
-    // add property
-    (function ( flag, name, index ) {
-      Object.defineProperty(this, name, {
-        get: function () {
-          return !! _flags[index];
-        },
-        set: function (state) {
-          _flags[index] = state ? flag : undefined;
-          this.dirty = true;
-        },
-        enumerable: true
-      });
-    }).call(this, k, FLAG_PROP_MAP[k].name, ++i);
-  }
-}
-
 function Gret (source, flags) {
   var _source,
+      _flags,
       _native,
-      _input;
+      _input,
+      i, k;
   if ( ! (this instanceof Gret) )
     throw new Error('constructor called as function');
-  _defineSettablePropFlag.call(this);
+//  _defineSettablePropFlag.call(this);
+  _flags = Array(Object.keys(FLAG_PROP_MAP).length);
   Object.defineProperties(this, {
     source: {
       get: function () {
@@ -287,6 +347,24 @@ function Gret (source, flags) {
       set: function ( source ) {
         _source = source instanceof RegExp ? source.source : source;
         this.dirty = true;
+      },
+      enumerable: true
+    },
+    flags: {
+      get: function () {
+        return _flags.join('');
+      },
+      set: function (flags) {
+        var i = -1,
+            k, s;
+        flags || (flags = '');
+        for (k in FLAG_PROP_MAP) {
+          if ( (s = (flags.indexOf(k) >= 0) ? k : undefined) !== _flags[++i] ) {
+            _flags[i] = s;
+           this.dirty = true;
+          }
+        }
+        _checkFlags(flags);
       },
       enumerable: true
     },
@@ -318,6 +396,23 @@ function Gret (source, flags) {
       enumerable: true
     }
   });
+  i = -1;
+  for (k in FLAG_PROP_MAP) {
+    // add property
+    (function ( flag, name, index ) {
+      Object.defineProperty(this, name, {
+        get: function () {
+          return !! _flags[index];
+        },
+        set: function (state) {
+          _flags[index] = state ? flag : undefined;
+          this.dirty = true;
+        },
+        enumerable: true
+      });
+    }).call(this, k, FLAG_PROP_MAP[k].name, ++i);
+  }
+  
   this.flags    = (typeof flags === 'string')
     ? flags
     : ((source instanceof RegExp && REGEX_FLAGS.exec(source.toString())[1]) || '');
@@ -334,7 +429,9 @@ Gret.prototype = Object.create(RegExp.prototype, {
   search: { value: _search },   // index or -1
   match:  { value: _match },    // match[0] or null
   exec:   { value: _exec },     // match array
-  replace:{ value: _replace }   // string
+  replace:{ value: _replace },  // replace matched
+  filter: { value: _filter },   // remove non-matched and replace matched
+  split:  { value: _split }     // split
 });
 Gret.prototype.constructor = Gret;
 Object.defineProperties(Gret, {

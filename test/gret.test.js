@@ -8,9 +8,10 @@ function stringify ( val, indent ) {
   }, indent);
 }
 
-function test ( source, flags, input, startIndex, endIndex ) {
+function test ( source, flags, input, startIndex, endIndex, replacer ) {
   var regex = new Gret(source, flags),
-      g = regex.global;
+      g = regex.global,
+      m;
   console.log('regex = new Gret(', stringify(source), ', ', stringify(flags), ')');
   console.log('Is regex an instance of Gret? ' + (regex instanceof Gret)); // true
   console.log('Is regex an instance of RegExp? ' + (regex instanceof RegExp)); // true
@@ -22,10 +23,22 @@ function test ( source, flags, input, startIndex, endIndex ) {
     do {
       console.log(['regex.exec(', input, ', ', startIndex, ', ', endIndex, ')'].join(''), m = regex.exec( input, startIndex, endIndex ));
     } while( g && m );
+    do {
+      console.log(['regex.test(', input, ', ', startIndex, ', ', endIndex, ')'].join(''), m = regex.test( input, startIndex, endIndex ));
+    } while( g && m );
+    do {
+      console.log(['regex.search(', input, ', ', startIndex, ', ', endIndex, ')'].join(''), m = regex.search( input, startIndex, endIndex ));
+    } while( g && m >= 0 );
+    console.log(['regex.match(', input, ', ', startIndex, ', ', endIndex, ')'].join(''), m = regex.match( input, startIndex, endIndex ));
+    if ( replacer != null ) {
+      console.log(['regex.replace(', input, ', ', replacer, ', ', startIndex, ', ', endIndex, ')'].join(''), m = regex.replace( input, replacer, startIndex, endIndex ));
+      console.log(['regex.filter(', input, ', ', replacer, ', ', startIndex, ', ', endIndex, ')'].join(''), m = regex.filter( input, replacer, startIndex, endIndex ));
+    }
   }
 }
 
 var s = '(?<word>\\w+)',
+    r = '$0[\\k<word>]',
     t = "every day I write the book.",
     start = 5,
     end = t.length - start;
@@ -39,7 +52,9 @@ test( s, 'g', t, start, end );
 test( s, 'y', t, start, end );
 test( s, Gret.nativeFlags(Gret.SUPPORTEDFLAGS), t, start, end );
 test( s, Gret.SUPPORTEDFLAGS, t, start, end );
-
+test( s, 'g', t, start, end, r );
+console.log( '(new Gret("\\s+")).split( ', JSON.stringify(t), ' )', (new Gret("\\s+")).split( t ) );
+console.log( '(new Gret("\\s+")).split( ', JSON.stringify(t), ', null, null, 2 )', (new Gret("\\s+")).split( t, null, null, 2 ) );
 //e = '(?<word>\\w+)';
 //t = "every day I write the book.";
 //i = 10;

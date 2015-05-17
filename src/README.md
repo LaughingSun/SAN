@@ -1,6 +1,6 @@
 This directory contains the various utilities of the SAN project, namely:
 * Gret      - an extended RegEx class with some very useful methods that were an obvious oversite in the ECMA specs.
-* JSONify   - nothing fancy it just provides the obvious callbacks for JSON.stringify and JSON.parse 
+* JSON      - nothing fancy it just provides the obvious callbacks for JSON.stringify and JSON.parse
 * Builder   - a string builder follorwing Java's StringBuilder class
 
 Soon to come:
