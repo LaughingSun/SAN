@@ -74,12 +74,12 @@ function _method_prep ( input, startIndex, endIndex ) {
   if ( typeof input === 'string' && this.input !== input )
     this.input = input;
   if ( startIndex != null )
-    this.startIndex = startIndex;
+    this.start = startIndex;
   if ( endIndex != null )
-    this.endIndex = endIndex;
-  regex.lastIndex = this.global && this.index >= 0 ? this.lastIndex : this.startIndex;
+    this.end = endIndex;
+  regex.lastIndex = this.global && this.index >= 0 ? this.lastIndex : this.start;
   return regex
-//  console.log( '_method_prep', regex,  regex.lastIndex, this.input, this.startIndex, this.endIndex, this.lastIndex );
+//  console.log( '_method_prep', regex,  regex.lastIndex, this.input, this.start, this.end, this.lastIndex );
 }
 
 function _getNamedCaptures ( matched, namedIndexes ) {
@@ -93,10 +93,11 @@ function _getNamedCaptures ( matched, namedIndexes ) {
   return named;
 }
 
-function __exec__ ( native ) {
-  var startIndex = this.startIndex,
-      endIndex = this.endIndex,
+function _exec_ ( native ) {
+  var startIndex = this.start,
+      endIndex = this.end,
       matched;
+  native || (native = this.native);
   if ( (matched = native.exec(this.input))
       && matched.index >= startIndex
       && matched.index < endIndex
@@ -107,32 +108,32 @@ function __exec__ ( native ) {
   } else {
 //    console.log(matched);
     matched = null;
-    this.lastIndex = this.startIndex;
+    this.lastIndex = this.start;
     this.index = -1;
   }
-//  this.lastIndex = Max(this.startIndex, native.lastIndex);
+//  this.lastIndex = Max(this.start, native.lastIndex);
   return matched;
 }
 
 /**
- * match array
+ * 
  */
-function _exec ( input, startIndex, endIndex ) {
-  return __exec__.call(this, _method_prep.call(this, input, startIndex, endIndex));
+function exec ( input, startIndex, endIndex ) {
+  return _exec_.call(this, this.native = _method_prep.call(this, input, startIndex, endIndex));
 }
 
 /**
  * true or false
  */
-function _test ( input, startIndex, endIndex ) {
-  return !! __exec__.call(this, _method_prep.call(this, input, startIndex, endIndex));
+function test ( input, startIndex, endIndex ) {
+  return !! _exec_.call(this, this.native = _method_prep.call(this, input, startIndex, endIndex));
 }
 
 /**
  * index or -1
  */
-function _search ( input, startIndex, endIndex ) {
-  var matched = __exec__.call(this, _method_prep.call(this, input, startIndex, endIndex));
+function search ( input, startIndex, endIndex ) {
+  var matched = _exec_.call(this, this.native = _method_prep.call(this, input, startIndex, endIndex));
   return matched ? matched.index : -1;
 }
 
@@ -143,13 +144,13 @@ function _search ( input, startIndex, endIndex ) {
  *    ["the whole string", "whole", index: 4, lastIndex: 9],
  *    ["the whole string", "string", index: 10, lastIndex: 16] ]
  */
-function _match ( input, startIndex, endIndex ) {
-  var native = _method_prep.call(this, input, startIndex, endIndex),
+function match ( input, startIndex, endIndex ) {
+  var native = this.native = _method_prep.call(this, input, startIndex, endIndex),
       matched = [],
       g = this.global,
       m;
   do {
-    if ( (m = __exec__.call(this, native)) )
+    if ( (m = _exec_.call(this, native)) )
       matched.push( m );
   } while( g && m );
   if ( matched.length )
@@ -183,23 +184,58 @@ function _compileReplacer (replacer) {
 }
 
 /**
- * string
+ * 
  */
-function _replace ( input, replacer, startIndex, endIndex ) {
-  var native = _method_prep.call(this, input, startIndex, endIndex),
+function _replace_ ( native ) {
+  var input = this.input,
+      replacer = this.replacer,
       result = [],
       g = this.global,
-      ci = 0,
+      ci = this.start,
       m;
-  (replacer instanceof Function) || (replacer = _compileReplacer(replacer))
+  native || (native = this.native);
   do {
-    if ( (m = __exec__.call(this, native)) ) {
+    if ( (m = _exec_.call(this, native)) ) {
       result.push( input.slice(ci, m.index));
       result.push( replacer( m, m.named ) );
       ci = native.lastIndex;
     }
   } while( g && m );
-  result.push( input.slice(ci, this.endIndex));
+  result.push( input.slice(ci, this.end));
+  return result.join('');
+}
+
+/**
+ * 
+ */
+function replace ( input, replacer, startIndex, endIndex ) {
+  var native = this.native = _method_prep.call(this, input, startIndex, endIndex),
+      g = this.global,
+      m;
+  if ( replacer ) {
+      this.replacer = (replacer instanceof Function)
+          ? replacer : _compileReplacer(replacer);
+  }
+  return _replace_.call(this, native);
+}
+
+/**
+ * filter
+ * 
+ * identical to replace() except only the matches are return
+ */
+function _filter_ ( native ) {
+  var input = this.input,
+      replacer = this.replacer,
+      result = [],
+      g = this.global,
+      m;
+  native || (native = this.native);
+  do {
+    if ( (m = _exec_.call(this, native)) ) {
+      result.push( replacer( m, m.named ) );
+    }
+  } while( g && m );
   return result.join('');
 }
 
@@ -208,18 +244,15 @@ function _replace ( input, replacer, startIndex, endIndex ) {
  * 
  * identical to replace() except only the matches are return
  */
-function _filter ( input, replacer, startIndex, endIndex ) {
-  var native = _method_prep.call(this, input, startIndex, endIndex),
-      result = [],
+function filter ( input, replacer, startIndex, endIndex ) {
+  var native = this.native = _method_prep.call(this, input, startIndex, endIndex),
       g = this.global,
       m;
-  (replacer instanceof Function) || (replacer = _compileReplacer(replacer))
-  do {
-    if ( (m = __exec__.call(this, native)) ) {
-      result.push( replacer( m, m.named ) );
-    }
-  } while( g && m );
-  return result.join('');
+  if ( replacer ) {
+      this.replacer = (replacer instanceof Function)
+          ? replacer : _compileReplacer(replacer);
+  }
+  return _filter_.call(this, native);
 }
 
 /*
@@ -234,25 +267,25 @@ function _filter ( input, replacer, startIndex, endIndex ) {
  * @param {boolean} delim - parenthesized expression in the delimiter pattern will be captured and returned as well
  * @returns {Array} 
  */
-function _split ( input, startIndex, endIndex, limit, delimCapture ) {
+function split ( input, startIndex, endIndex, limit, delimCapture ) {
   var native = _method_prep.call(this, input, startIndex, endIndex),
       result = [],
-      ci = this.startIndex,
+      ci = this.start,
       i = 0,
       m;
   do {
-    if ( (m = __exec__.call(this, native)) && m.index < this.endIndex ) {
+    if ( (m = _exec_.call(this, native)) && m.index < this.end ) {
       result.push( input.slice(ci, m.index));
       if ( delimCapture )
         result.push( m[0] );
       ci = native.lastIndex;
     } else {
       m = null;
-      this.lastIndex = this.startIndex;
+      this.lastIndex = this.start;
       this.index = -1;
     }
   } while( m && (limit == null || ++i < limit) );
-  result.push( input.slice(ci, this.endIndex));
+  result.push( input.slice(ci, this.end));
   return result;
 }
 
@@ -277,6 +310,11 @@ function _loadCleaner ( name, options ) {
       return gret.replace.call(gret, input, replacer, index, endIndex);
     };
   }
+}
+
+function Clean ( name, input, options ) {
+  var cleaner = _loadCleaner( name, options );
+  return cleaner( input );
 }
 
 /**
@@ -385,8 +423,8 @@ function Gret (source, flags) {
         return _input
       },
       set: function ( text ) {
-        this.startIndex = 0;
-        this.endIndex = (_input = text).length;
+        this.start = 0;
+        this.end = (_input = text).length;
         this.index = -1;
       },
       enumerable: true
@@ -425,13 +463,16 @@ Gret.prototype = Object.create(RegExp.prototype, {
   toString: { value: function () {
       return ['/', this.source, '/' , this.flags].join('');
   } },
-  test:   { value: _test },     // true or false
-  search: { value: _search },   // index or -1
-  match:  { value: _match },    // match[0] or null
-  exec:   { value: _exec },     // match array
-  replace:{ value: _replace },  // replace matched
-  filter: { value: _filter },   // remove non-matched and replace matched
-  split:  { value: _split }     // split
+  exec:    { value: exec },     // match array
+  filter:  { value: filter },   // remove non-matched and replace matched
+  match:   { value: match },    // match[0] or null
+  replace: { value: replace },  // replace matched
+  search:  { value: search },   // index or -1
+  split:   { value: split },    // split
+  test:    { value: test },     // true or false
+  _exec:   { value: _exec_ },    // match array
+  _filter: { value: _filter_ },  // remove non-matched and replace matched
+  _replace:{ value: _replace_ }  // replace matched
 });
 Gret.prototype.constructor = Gret;
 Object.defineProperties(Gret, {
@@ -442,6 +483,7 @@ Object.defineProperties(Gret, {
         flags.push(k);
       return flags.join('');
   })() },
+  clean:            { value: Clean },
   loadCleaner:      { value: _loadCleaner },     // string (this does a predefined replace with options
   nativeFlags:      { value: _getNativeFlags },
   validateFlags:    { value: _checkFlags },
