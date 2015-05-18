@@ -41,7 +41,8 @@ var s = '(?<word>\\w+)',
     r = '$0[\\k<word>]',
     t = "every day I write the book.",
     start = 5,
-    end = t.length - start;
+    end = t.length - start,
+    escaper = Gret.loadCleaner('escape-string');
 //console.log(Gret);
 //console.log('Gret.SUPPORTEDFLAGS', Gret.SUPPORTEDFLAGS);
 //console.log('Gret.getNativeFlags(', Gret.SUPPORTEDFLAGS, ')', Gret.nativeFlags(Gret.SUPPORTEDFLAGS));
@@ -55,6 +56,7 @@ test( s, Gret.SUPPORTEDFLAGS, t, start, end );
 test( s, 'g', t, start, end, r );
 console.log( '(new Gret("\\s+")).split( ', JSON.stringify(t), ' )', (new Gret("\\s+")).split( t ) );
 console.log( '(new Gret("\\s+")).split( ', JSON.stringify(t), ', null, null, 2 )', (new Gret("\\s+")).split( t, null, null, 2 ) );
+console.log( 'escaper("\\"\'")', escaper("\n\r\t\"'"));
 //e = '(?<word>\\w+)';
 //t = "every day I write the book.";
 //i = 10;

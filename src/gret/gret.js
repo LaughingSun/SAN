@@ -40,7 +40,7 @@ var FLAG_PROP_MAP = {
     PREP_REGEXP   = /\\(?!k).|\((?:\?<(\w+)>|\?P<(\w+)>|\?P=(\w+)\)|(?!\?[:!=]))|\\k<(\w+)>|\\k'(\w+)'/g,
     //                        backref 0-99             backref   named    named          named
     PREP_REPLACER = /[\$\\](?:((?:0|[1-9]\d?)(?!\d))|\{(\d+)\}|k<(\w+)>|k'(\w+)')|\(\?P=?(\w+)\)/g,
-    CONF_LIB = 'conf/',
+    CONF_LIB = './conf/',
     CLEAN_EXT = '.clean.json',
     REPLACER_EXT = '.replacer.js',
     Slice = Array.prototype.slice,
@@ -179,12 +179,12 @@ function match ( input, startIndex, endIndex ) {
   return null;
 }
 
-var _replacerCache = {};
+var _ReplacerCache = {};
 function _compileReplacer (replacer) {
   var chain, ci,
       m, t;
-  if ( replacer in _replacerCache )
-    return _replacerCache[replacer];
+  if ( replacer in _ReplacerCache )
+    return _ReplacerCache[replacer];
   chain = [];
   props = {};
   PREP_REPLACER.lastIndex = ci = 0;
@@ -201,7 +201,7 @@ function _compileReplacer (replacer) {
       throw new Error(['could nto compile ', JSON.stringify(m[0]), ' at ', m.index, ' in ', JSON.stringify(replacer), ', this shoudl never happen'].join(''));
   }
   (ci < replacer.length) && chain.push(JSON.stringify(replacer.slice(ci)));
-  return _replacerCache[replacer] = new Function('matched, named', ['return [', chain.join(), '].join(\'\')'].join(''))
+  return _ReplacerCache[replacer] = new Function('matched, named', ['return [', chain.join(), '].join(\'\')'].join(''))
 }
 
 /**
@@ -212,13 +212,13 @@ function _compileReplacer (replacer) {
 /**
  * 
  */
-function _filter_ ( input ) {
+function _filter_ ( ) {
   var native = this.native,
       replacer = this.replacer,
+      input = this.input,
       result = [],
       g = this.global,
       ce, matched;
-  if ( input == null ) input = this.input;
   native.lastIndex = this.start;
   ce = this.end;
   do {
@@ -247,14 +247,14 @@ function filter ( input, replacer, start, end ) {
 /**
  * 
  */
-function _replace_ ( input ) {
+function _replace_ ( ) {
   var native = this.native,
       replacer = this.replacer,
+      input = this.input,
       result = [],
       g = this.global,
       ci = 0,
       ce, matched;
-  if ( input == null ) input = this.input;
   native.lastIndex = this.start;
   ce = this.end;
   do {
@@ -316,21 +316,21 @@ function split ( input, startIndex, endIndex, limit, delimCapture ) {
   return result;
 }
 
-function _clean_ (input, options) {
+function clean (input, options) {
   var regex, replacer,
       result = [],
       ci, ce, m;
   this.input = input;
   if ( (replacer = this.replacer).setOptions instanceof Function )
     replacer.setOptions.call(this, options);
-  (regex = this.regex).lastIndex = ci = this.start;
+  (regex = this.native).lastIndex = ci = this.start;
   ce = this.end;
   while ( (m = regex.exec(input)) ) {
     result.push( input.slice(ci, m.index));
     result.push( replacer( m, m.named ) );
     ci = regex.lastIndex;
   }
-  result.push( input.slice(ci, end));
+  result.push( input.slice(ci, ce));
   return result.join('');
 }
 
@@ -339,19 +339,13 @@ function _clean_ (input, options) {
  */
 var _cleanerCache = {};
 function _loadCleaner ( name ) {
-  var gre, conf, replacer;
+  var gre, conf;
   if ( name in _cleanerCache ) return _cleanerCache[name];
   conf = require([CONF_LIB, name, CLEAN_EXT].join(''));
-  if ( conf.replacer_file ) {
-    replacer = require([CONF_LIB, replacer_file, REPLACER_EXT].join(''));
-  } else if ( typeof conf.replacer === 'string' ) {
-    replacer = _compileReplacer(conf.replacer);
-  } else
-    return null;
   (gre = new Gret(conf.source, conf.flags)).replacer = conf.replacer_file
-      ? require([CONF_LIB, replacer_file, REPLACER_EXT].join(''))
+      ? require([CONF_LIB, conf.replacer_file, REPLACER_EXT].join(''))
       : _compileReplacer(conf.replacer);
-  return _cleanerCache[name] = _clean_.bind(gre);
+  return _cleanerCache[name] = clean.bind(gre);
 }
 
 function Clean ( name, input, options ) {
@@ -527,6 +521,7 @@ Object.defineProperties(Gret, {
       return flags.join('');
   })() },
   clean:            { value: Clean },
+  compileReplacer:  { value: _compileReplacer },
   loadCleaner:      { value: _loadCleaner },     // string (this does a predefined replace with options
   nativeFlags:      { value: _getNativeFlags },
   validateFlags:    { value: _checkFlags },
@@ -535,3 +530,5 @@ Object.defineProperties(Gret, {
 
 
 module.exports = Gret;
+
+console.log(module);
