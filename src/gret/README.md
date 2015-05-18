@@ -31,7 +31,8 @@ instance method usages:
 + gre.split(input, start?, end?, limit?, delim): returns an array of split tokens
 + gre.exec(input, start?, end?): returns a matched array
 + gre.replace(input, replacement, start?, end?): rturns the processed string
-+ _<anyof the above methods but without any of the input, start or end arguments).  This runs faster and more effeciently, you can set those arguments by settinf gre.input, gre.start and gre.end, respectfully or was it respectively.
++ _<anyof the above methods but without any of the input, start or end arguments).  This runs faster and more effeciently, you can set those arguments by setting gre.input, gre.start and gre.end, respectfully or was it respectively.
+
 class method usages:
 * Gret.clean(type, source, start?, end?, options?: returns the cleaned string (see API docs for details)
 * Gret.compileSource(source, flags): return a native regex compiled from source and flags
