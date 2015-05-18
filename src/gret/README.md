@@ -1,5 +1,7 @@
 Gret - General RegEx Tool
 
+Stability: "Seems stable without any unit or significant testing."
+
 the following is a summary of usage, an api document(s) will soon be aviable in the SAN/docs directory.
 
 from Node: 
