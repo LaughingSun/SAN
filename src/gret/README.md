@@ -11,7 +11,7 @@ constructor usages:
 + gre = new Gret(regex);
 + gre = new Gret(regex, flags);
 
-method usages:
+instance method usages:
 + gre.exec(input, start?, end?): returns a matched array
 + gre.filter(input, replacement, start?, end?): returns the processed string (removes unmathed parts)
 + gre.match(input, start?, end?): returns a matched array or array of them
@@ -20,7 +20,7 @@ method usages:
 + gre.exec(input, start?, end?): returns a matched array
 + gre.replace(input, replacement, start?, end?): rturns the processed string
 
-class methods:
+class method usages:
 * Gret.clean(type, source, start?, end?, options?: returns the cleaned string (see API docs for details)
 * Gret.compileSource(source, flags): return a native regex compiled from source and flags
 * Gret.compileReplacer(replacement): returns the replacer compiled from the replacerr
