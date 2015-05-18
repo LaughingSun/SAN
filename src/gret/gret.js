@@ -321,13 +321,12 @@ function clean (input, options) {
       result = [],
       ci, ce, m;
   this.input = input;
-  if ( (replacer = this.replacer).setOptions instanceof Function )
-    replacer.setOptions.call(this, options);
   (regex = this.native).lastIndex = ci = this.start;
+  replacer = this.replacer;
   ce = this.end;
   while ( (m = regex.exec(input)) ) {
     result.push( input.slice(ci, m.index));
-    result.push( replacer( m, m.named ) );
+    result.push( replacer( m, m.named, options ) );
     ci = regex.lastIndex;
   }
   result.push( input.slice(ci, ce));

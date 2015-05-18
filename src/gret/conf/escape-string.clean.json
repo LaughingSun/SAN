@@ -1,0 +1,7 @@
+{
+    "name":     "escape-string",
+    "source":   "([\\b\\f\\n\\r\\t\\u000b])|([\\u0000-\\u001f\\u007f-])|([\"'])|\\\\",
+    "flags":    "g",
+    "replacer": "\\$0",
+    "replacer_file": "escape-string"
+}
