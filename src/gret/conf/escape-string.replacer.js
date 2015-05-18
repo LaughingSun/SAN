@@ -31,24 +31,29 @@ var ESC_CHARS = {
       "\t": "\\t",
       "\u000B": "\\v"
     },
-    padding = '00000000';
+    padding = '00000000',
+    _quotes;
 
 function padnum(text, width) {
   l = text.length;
   return l < width ? text : padding.slice(-width+l) + text;
 }
-function replacer ( matched, named, options ) {
-  var quotes = options && options.quotes,
-      ch;
-  if ( quotes == null )
-    quotes = '\'"';
+
+function setQuotes( quotes ) {
+  _quotes = (typeof quotes == "string") ? quotes : "'\"";
+}
+
+function replacer ( matched, named ) {
+  var ch;
   if ( (ch = matched[1]) )
     return ESC_CHARS[ch];
   else if ( (ch = matched[2]) )
     return '\\u' + padnum(ch.charCodeAt(0).toString(16), 4);
-  if ( ! (ch = matched[3]) || quotes.indexOf(ch) >= 0 )
+  if ( ! (ch = matched[3]) || _quotes.indexOf(ch) >= 0 )
     return '\\' + matched[0];
   return matched[0];
 }
+
+replacer.configure = setQuotes;
 
 module.exports = replacer;
