@@ -6,12 +6,12 @@ from Node:
 from browsers:
 + to load: <script src="SAN/dist/browsified/gret.js">
 
-Constructor usages:
+constructor usages:
 + gret = new Gret(source, flags);
 + gret = new Gret(regex);
 + gret = new Gret(regex, flags);
 
-Method usages:
+method usages:
 + gret.exec(input, start?, end?): returns a matched array
 + gret.filter(input, replacement, start?, end?): returns the processed string (removes unmathed parts)
 + gret.match(input, start?, end?): returns a matched array or array of them
