@@ -34,7 +34,6 @@ instance method usages:
 + gre._exec(native?): returns a matched array
 + gre._filter(native?): returns the processed string (removes unmathed parts)
 + gre._replace(native?): rturns the processed string
-+ _<anyof the above methods but without any of the input, start or end arguments).  This runs faster and more effeciently, you can set those arguments by setting gre.input, gre.start and gre.end, respectfully or was it respectively.
 
 class method usages:
 * Gret.clean(type, source, start?, end?, options?: returns the cleaned string (see API docs for details)
