@@ -323,10 +323,12 @@ function clean (input, options) {
   this.input = input;
   (regex = this.native).lastIndex = ci = this.start;
   replacer = this.replacer;
+  if ( replacer.configure instanceof Function )
+    replacer.configure( options );
   ce = this.end;
   while ( (m = regex.exec(input)) ) {
     result.push( input.slice(ci, m.index));
-    result.push( replacer( m, m.named, options ) );
+    result.push( replacer( m, m.named ) );
     ci = regex.lastIndex;
   }
   result.push( input.slice(ci, ce));
