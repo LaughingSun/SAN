@@ -4,7 +4,7 @@ from Node:
 + to install: npm install gret, to load: Gret = require('SAN/dist/min/gret.js');
 
 from browsers:
-+ to load: <script src="SAN/dist/browsified/gret.js">
++ to load: &lt;script src="SAN/dist/browsified/gret.js">
 
 constructor usages:
 + gret = new Gret(source, flags);
