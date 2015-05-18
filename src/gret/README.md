@@ -33,10 +33,10 @@ instance method usages:
 + gre.search(input?, start?, end?): returns the index of the matched
 + gre.split(input?, start?, end?, limit?, delim): returns an array of split tokens
 + gre.test(input?, start?, end?): returns a matched array
-+ gre._exec_(native?): returns a matched array
-+ gre._filter_(native?): returns the processed string (removes unmathed parts)
-+ gre._replace_(native?): rturns the processed string
-+ gre._search_(native?): returns the index of the matched
++ gre.\_exec_(native?): returns a matched array
++ gre.\_filter_(native?): returns the processed string (removes unmathed parts)
++ gre.\_replace_(native?): rturns the processed string
++ gre.\_search_(native?): returns the index of the matched
 
 class method usages:
 * Gret.clean(type, source, start?, end?, options?: returns the cleaned string (see API docs for details)
