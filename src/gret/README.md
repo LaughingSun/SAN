@@ -26,16 +26,17 @@ instance attributes:
 + dirty: this causes the source and flags to be recompiled on next use.
 
 instance method usages:
-+ gre.exec(input, start?, end?): returns a matched array
-+ gre.filter(input, replacement, start?, end?): returns the processed string (removes unmathed parts)
-+ gre.match(input, start?, end?): returns a matched array or array of them
-+ gre.replace(input, replacement, start?, end?): rturns the processed string
-+ gre.search(input, start?, end?): returns the index of the matched
-+ gre.split(input, start?, end?, limit?, delim): returns an array of split tokens
-+ gre.test(input, start?, end?): returns a matched array
-+ gre._exec(native?): returns a matched array
-+ gre._filter(native?): returns the processed string (removes unmathed parts)
-+ gre._replace(native?): rturns the processed string
++ gre.exec(input?, start?, end?): returns a matched array
++ gre.filter(input?, replacement, start?, end?): returns the processed string (removes unmathed parts)
++ gre.match(input?, start?, end?): returns a matched array or array of them
++ gre.replace(input?, replacement, start?, end?): rturns the processed string
++ gre.search(input?, start?, end?): returns the index of the matched
++ gre.split(input?, start?, end?, limit?, delim): returns an array of split tokens
++ gre.test(input?, start?, end?): returns a matched array
++ gre._exec_(native?): returns a matched array
++ gre._filter_(native?): returns the processed string (removes unmathed parts)
++ gre._replace_(native?): rturns the processed string
++ gre._search_(native?): returns the index of the matched
 
 class method usages:
 * Gret.clean(type, source, start?, end?, options?: returns the cleaned string (see API docs for details)
