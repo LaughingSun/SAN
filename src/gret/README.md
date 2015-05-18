@@ -1,6 +1,12 @@
 Gret - General RegEx Tool
 
-Usages:
+from Node: 
++ to install: npm install gret, to load: Gret = require('SAN/dist/min/gret.js');
+
+from browsers:
++ to load: <script src="SAN/dist/browsified/gret.js">
+
+Constructor usages:
 + gret = new Gret(source, flags);
 + gret = new Gret(regex);
 + gret = new Gret(regex, flags);
