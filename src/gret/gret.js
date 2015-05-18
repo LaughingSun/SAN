@@ -199,7 +199,7 @@ function _replace ( input, replacer, startIndex, endIndex ) {
       ci = native.lastIndex;
     }
   } while( g && m );
-  result.push( input.slice(ci));
+  result.push( input.slice(ci, this.endIndex));
   return result.join('');
 }
 
