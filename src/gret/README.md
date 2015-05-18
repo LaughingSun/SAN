@@ -1,7 +1,7 @@
 Gret - General RegEx Tool
 
 from Node: 
-+ to install: npm install gret, to load: Gret = require('SAN/dist/min/gret.js');
++ to load: Gret = require('SAN/dist/min/gret.js');
 
 from browsers:
 + to load: &lt;script src="SAN/dist/browsified/gret.js">
