@@ -1,6 +1,6 @@
 Gret - General RegEx Tool
 
-Stability: "Seems stable without any unit or significant testing."
+Stability: "Seems stable without any unit or significant testing, except that n, s and u flags are not yet implemented, and x only partially."
 
 the following is a summary of usage, an api document(s) will soon be aviable in the SAN/docs directory.
 
