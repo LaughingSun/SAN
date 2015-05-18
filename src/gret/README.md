@@ -27,10 +27,13 @@ instance method usages:
 + gre.exec(input, start?, end?): returns a matched array
 + gre.filter(input, replacement, start?, end?): returns the processed string (removes unmathed parts)
 + gre.match(input, start?, end?): returns a matched array or array of them
++ gre.replace(input, replacement, start?, end?): rturns the processed string
 + gre.search(input, start?, end?): returns the index of the matched
 + gre.split(input, start?, end?, limit?, delim): returns an array of split tokens
-+ gre.exec(input, start?, end?): returns a matched array
-+ gre.replace(input, replacement, start?, end?): rturns the processed string
++ gre.test(input, start?, end?): returns a matched array
++ gre._exec(native?): returns a matched array
++ gre._filter(native?): returns the processed string (removes unmathed parts)
++ gre._replace(native?): rturns the processed string
 + _<anyof the above methods but without any of the input, start or end arguments).  This runs faster and more effeciently, you can set those arguments by setting gre.input, gre.start and gre.end, respectfully or was it respectively.
 
 class method usages:
