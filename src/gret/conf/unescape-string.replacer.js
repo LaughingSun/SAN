@@ -23,12 +23,12 @@
  */
 
 var ESC_CHARS = {
-      "\0": "\\0",
-      "\b": "\\b",
-      "\f": "\\f",
-      "\n": "\\n",
-      "\r": "\\r",
-      "\t": "\\t"
+      "0": "\0",
+      "b": "\b",
+      "f": "\f",
+      "n": "\n",
+      "r": "\r",
+      "t": "\t"
     },
     padding = '00000000',
     _quotes;
@@ -46,10 +46,10 @@ function replacer ( matched, named ) {
   var ch;
   if ( (ch = matched[1]) )
     return ESC_CHARS[ch];
-  else if ( (ch = matched[2]) )
-    return '\\u' + padnum(ch.charCodeAt(0).toString(16), 4);
-  if ( ! (ch = matched[3]) || _quotes.indexOf(ch) >= 0 )
-    return '\\' + matched[0];
+  else if ( (ch = matched[2] || matched[3]) )
+    return String.fromCharCode(parseInt(ch, 16));
+  if ( (ch = matched[4]) )
+    return ch;
   return matched[0];
 }
 

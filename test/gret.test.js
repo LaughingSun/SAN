@@ -42,7 +42,8 @@ var s = '(?<word>\\w+)',
     t = "every day I write the book.",
     start = 5,
     end = t.length - start,
-    escaper = Gret.loadCleaner('escape-string');
+    escaper = Gret.loadCleaner('escape-string'),
+    unescaper = Gret.loadCleaner('unescape-string');
 //console.log(Gret);
 //console.log('Gret.SUPPORTEDFLAGS', Gret.SUPPORTEDFLAGS);
 //console.log('Gret.getNativeFlags(', Gret.SUPPORTEDFLAGS, ')', Gret.nativeFlags(Gret.SUPPORTEDFLAGS));
@@ -61,6 +62,7 @@ console.log( 'escaper("characters \\"\'", {quotes:""})', escaper("characters \n\
 console.log( 'escaper("characters \\"\'", {quotes:"\\""})', escaper("characters \n\r\t\"'", {quotes:"\""}));
 console.log( 'escaper("characters \\"\'", {quotes:"\'"})', escaper("characters \n\r\t\"'", {quotes:"'"}));
 console.log( 'escaper("characters \\"\'", {quotes:"\'\\""})', escaper("characters \n\r\t\"'", {quotes:"'\""}));
+console.log( 'unescaper("characters \\\\\\"\\\'", {quotes:"\'\\""})', unescaper("characters \\\"\'", {quotes:"'\""}));
 //e = '(?<word>\\w+)';
 //t = "every day I write the book.";
 //i = 10;

@@ -1,0 +1,6 @@
+{
+    "name":     "escape-string",
+    "source":   "\\\\(?:([bfnrt])|x([0-9a-fA-f]{2})|u([0-9a-fA-f]{4})|(.))",
+    "flags":    "g",
+    "replacer_file": "unescape-string"
+}
