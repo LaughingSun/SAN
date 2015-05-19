@@ -317,18 +317,19 @@ function split ( input, startIndex, endIndex, limit, delimCapture ) {
 }
 
 function clean (input, options) {
-  var regex, replacer,
+  var namedIndexes, regex, replacer,
       result = [],
       ci, ce, m;
   this.input = input;
   (regex = this.native).lastIndex = ci = this.start;
+  namedIndexes = regex.namedIndexes;
   replacer = this.replacer;
   if ( replacer.configure instanceof Function )
     replacer.configure( options );
   ce = this.end;
   while ( (m = regex.exec(input)) ) {
     result.push( input.slice(ci, m.index));
-    result.push( replacer( m, m.named ) );
+    result.push( replacer( m, _getNamedCaptures( m, namedIndexes ) ) );
     ci = regex.lastIndex;
   }
   result.push( input.slice(ci, ce));

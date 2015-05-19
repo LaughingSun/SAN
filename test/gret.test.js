@@ -43,7 +43,8 @@ var s = '(?<word>\\w+)',
     start = 5,
     end = t.length - start,
     escaper = Gret.loadCleaner('escape-string'),
-    unescaper = Gret.loadCleaner('unescape-string');
+    unescaper = Gret.loadCleaner('unescape-string'),
+    pack = Gret.loadCleaner('pack');
 //console.log(Gret);
 //console.log('Gret.SUPPORTEDFLAGS', Gret.SUPPORTEDFLAGS);
 //console.log('Gret.getNativeFlags(', Gret.SUPPORTEDFLAGS, ')', Gret.nativeFlags(Gret.SUPPORTEDFLAGS));
@@ -63,6 +64,7 @@ console.log( 'escaper("characters \\"\'", {quotes:"\\""})', escaper("characters 
 console.log( 'escaper("characters \\"\'", {quotes:"\'"})', escaper("characters \n\r\t\"'", {quotes:"'"}));
 console.log( 'escaper("characters \\"\'", {quotes:"\'\\""})', escaper("characters \n\r\t\"'", {quotes:"'\""}));
 console.log( 'unescaper("characters \\\\\\"\\\'", {quotes:"\'\\""})', unescaper("characters \\\"\'", {quotes:"'\""}));
+console.log( 'pack("A8 a12 a", ["one","two","three"])', JSON.stringify(pack("A8 a12 a", ["one","two","three"])));
 //e = '(?<word>\\w+)';
 //t = "every day I write the book.";
 //i = 10;

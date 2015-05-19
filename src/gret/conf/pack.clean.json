@@ -1,0 +1,6 @@
+{
+    "name":     "pack",
+    "source":   "(?<cont>/)?(?<code>[aAZbBhHcCWsLqiInNvVjJfdFDpPuUwxX@#])(?<modifer>\\D+)?(?:(?<repeat1>\\d+|\\*)|\\[(?<repeat2>\\d+)\\])?",
+    "flags":    "g",
+    "replacer_file": "pack"
+}
