@@ -38,6 +38,9 @@ var FLAG_PROP_MAP = {
     REGEX_FLAGS   = new RegExp(["\\/(\w*)$"].join('')),
     //                                  named      refer      backref                 backref    backref
     PREP_REGEXP   = /\\(?!k).|(\()(?:\?<(\w+)>|\?P<(\w+)>|\?P=(\w+)\)|(?!\?[:!=]))|\\k<(\w+)>|\\k'(\w+)|(\.)'/g,
+    // when using the xflag, replace using these:
+    XFLAG_CLEAN_REGEX     = /\s+|#.*[\r\n]+|(\\[^])/g,
+    XFLAG_CLEAN_REPLACER  = '$1',
     //                        backref 0-99             backref   named    named          named
     PREP_REPLACER = /[\$\\](?:((?:0|[1-9]\d?)(?!\d))|\{(\d+)\}|k<(\w+)>|k'(\w+)')|\(\?P=?(\w+)\)/g,
     CONF_LIB = './conf/',
@@ -366,7 +369,8 @@ function Clean ( name, input, options ) {
 var _regexCache = {};
 function _compileSource(source, flags) {
   var key,
-      regex, sticky, nameOnly, dotall, chain, namedIndexes,
+      regex, sticky, nameOnly, dotall,
+      chain, namedIndexes,
       ci, pi, m, t;
   if ( source instanceof RegExp ) {
     if ( flags == null )
@@ -374,14 +378,14 @@ function _compileSource(source, flags) {
     source = source.flags;
   } else if ( ! flags )
     flags = '';
-//  this.dirty = false;
   if ( (key = ['/', source, '/', flags].join('')) in _regexCache )
-//    return this.native = _regexCache[key];
     return _regexCache[key];
   
   chain = (sticky = (flags.indexOf('y') >= 0)) ? ['(?:'] : [];
   nameOnly = flags.indexOf('n') >=0;
   dotall = flags.indexOf('s') >= 0;
+  if ( flags.indexOf('x') >= 0 )
+    source = source.replace(XFLAG_CLEAN_REGEX,XFLAG_CLEAN_REPLACER);
   namedIndexes = {};
   ci = 1;
   PREP_REGEXP.lastIndex = pi = 0;
