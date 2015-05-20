@@ -37,7 +37,7 @@ function test ( source, flags, input, startIndex, endIndex, replacer ) {
   }
 }
 
-var s = '(?<word>\\w+)',
+var s = '(\\s*)(?<word>\\w+)',
     r = '$0[\\k<word>]',
     t = "every day I write the book.",
     start = 5,
@@ -52,6 +52,7 @@ var s = '(?<word>\\w+)',
 test( s, undefined, t, start, end );
 test( s, '', t, start, end );
 test( s, 'g', t, start, end );
+test( s, 'n', t, start, end );
 test( s, 'y', t, start, end );
 test( s, Gret.nativeFlags(Gret.SUPPORTEDFLAGS), t, start, end );
 test( s, Gret.SUPPORTEDFLAGS, t, start, end );

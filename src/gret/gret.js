@@ -36,8 +36,8 @@ var FLAG_PROP_MAP = {
       "u": { flag:"u", native: false, name: "unicode" }
     },
     REGEX_FLAGS   = new RegExp(["\\/(\w*)$"].join('')),
-//    PREP_REGEXP   = /\\(?!k).|\((\?<(\w+)>|\?P<(\w+)>|(?!\?[:!=]))|\\k<(\w+)>|\\k'(\w+)'/g,
-    PREP_REGEXP   = /\\(?!k).|\((?:\?<(\w+)>|\?P<(\w+)>|\?P=(\w+)\)|(?!\?[:!=]))|\\k<(\w+)>|\\k'(\w+)'/g,
+    //                                  named      refer      backref                 backref    backref
+    PREP_REGEXP   = /\\(?!k).|(\()(?:\?<(\w+)>|\?P<(\w+)>|\?P=(\w+)\)|(?!\?[:!=]))|\\k<(\w+)>|\\k'(\w+)'/g,
     //                        backref 0-99             backref   named    named          named
     PREP_REPLACER = /[\$\\](?:((?:0|[1-9]\d?)(?!\d))|\{(\d+)\}|k<(\w+)>|k'(\w+)')|\(\?P=?(\w+)\)/g,
     CONF_LIB = './conf/',
@@ -366,7 +366,7 @@ function Clean ( name, input, options ) {
 var _regexCache = {};
 function _compileSource(source, flags) {
   var key,
-      regex, sticky, chain, namedIndexes,
+      regex, sticky, nameOnly, chain, namedIndexes,
       ci, pi, m, t;
   if ( source instanceof RegExp ) {
     if ( flags == null )
@@ -374,35 +374,47 @@ function _compileSource(source, flags) {
     source = source.flags;
   } else if ( ! flags )
     flags = '';
-  this.dirty = false;
+//  this.dirty = false;
   if ( (key = ['/', source, '/', flags].join('')) in _regexCache )
-    return this.native = _regexCache[key];
+//    return this.native = _regexCache[key];
+    return _regexCache[key];
   
   chain = (sticky = (flags.indexOf('y') >= 0)) ? ['(?:'] : [];
+  nameOnly = flags.indexOf('n') >=0;
   namedIndexes = {};
   ci = 1;
   PREP_REGEXP.lastIndex = pi = 0;
   while ( (m = PREP_REGEXP.exec(source)) ) {
     chain.push(source.slice(pi,m.index));  // add preceeding part
     pi = PREP_REGEXP.lastIndex;
-    // PREP_REGEXP   = /\\(?!k).|\((?:\?<(\w+)>|\?P<(\w+)>|\?P=(\w+)\)|(?!\?[:!=]))|\\k<(\w+)>|\\k'(\w+)'/g,
-    if ( (t = m[1] || m[2]) ) {         // namedIndexes capture
+    if ( (t = m[2] || m[3]) ) {         // namedIndexes capture
       namedIndexes[t] = ci;
       chain.push('(');
       ci++;
-    } else if ( (t = m[3] || m[4] || m[5]) ) {  // namedIndexes backreference
+    } else if ( (t = m[4] || m[5] || m[6]) ) {  // namedIndexes backreference
       if ( ! namedIndexes[t] )
         throw new Error(['no such namedIndexes back reference "', t, '"'].join(''));
       chain.push('\\', namedIndexes[t]);
+    } else if ( (t = m[1]) ) {  // if n flag basic capture
+      if ( nameOnly ) {  // if n flag basic capture
+        chain.push('(?:');
+//        console.log(['_compileSource m[1] && nameOnly', m[1]].join(''))
+      } else {
+        chain.push('(');
+        ci++;
+//        console.log(['_compileSource m[1] && ! nameOnly', m[1]].join(''))
+      }
     } else {
       chain.push(m[0]);
+//      console.log(['_compileSource m[0]', m[0]].join(''))
     }
   }
   sticky    // add trailing part
       ? chain.push(source.slice(pi), ')|([^])')
       : chain.push(source.slice(pi) );
   (regex = new RegExp(chain.join(''), _getNativeFlags(flags).replace('g','') + 'g')).namedIndexes = namedIndexes;
-  return (this.native = _regexCache[key] = regex);
+//  return (this.native = _regexCache[key] = regex);
+  return _regexCache[key] = regex;
 }
 
 function Gret (source, flags) {
@@ -446,8 +458,10 @@ function Gret (source, flags) {
     },
     native: {
       get: function () {
-        if ( this.dirty )
-          _native = this.compile( this.source, this.flags );
+        if ( this.dirty ) {
+          _native = _compileSource( this.source, this.flags );
+          this.dirty = false;
+        }
         return _native;
       },
       set: function ( regex ) {
@@ -468,7 +482,10 @@ function Gret (source, flags) {
       enumerable: true
     },
     compile: {
-      value: _compileSource,
+      value: function (source, flags) {
+        this.dirty = false;
+        return _native = _compileSource( this.source = source, this.flags = flags );
+      },
       enumerable: true
     }
   });
