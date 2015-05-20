@@ -1,6 +1,8 @@
 Gret - General RegEx Tool
 
-Stability: "Seems stable without any unit or significant testing(it's coming), except the 'u' flag."  In all likelihood the u flag will never be implemented because native support for all popular browsers is just around the corner, IE was quick to jump on that one, but is still flaky, chrome and FF already have implementation but is not ready for default support and it must be turned on.  But since it seems that cross browser support is only months away I will not implement a non-native u lfags support.
+Stability: "Seems stable without any unit or significant testing(it's coming), except the 'u' flag."  
+
+In all likelihood the u flag will never be implemented because native support for all popular browsers is just around the corner. Chrome, FF, safari and IE(not yet stable) already have implementation but is not ready for default support and must be turned on.  I have put astral and unicode flags style code points on the todo list and that should be added within the week.
 
 the following is a summary of usage, an api document(s) will soon be aviable in the SAN/docs directory.
 
