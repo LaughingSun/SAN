@@ -22,8 +22,8 @@
  * THE SOFTWARE.
  */
 
-replacer = require('../src/json/replacer.js');
-reviver = require('../src/json/reviver.js');
+replacer = require('../src/jsonreplacercb.js');
+reviver = require('../src/jsonrevivercb.js');
 
 var accum = [],
     cb, v, w;

@@ -43,7 +43,7 @@ var FLAG_PROP_MAP = {
     XFLAG_CLEAN_REPLACER  = '$1',
     //                        backref 0-99             backref   named    named          named
     PREP_REPLACER = /[\$\\](?:((?:0|[1-9]\d?)(?!\d))|\{(\d+)\}|k<(\w+)>|k'(\w+)')|\(\?P=?(\w+)\)/g,
-    CONF_LIB = './conf/',
+    CLEAN_LIBPATH = './gret/cleaners/',
     CLEAN_EXT = '.clean.json',
     REPLACER_EXT = '.replacer.js',
     Slice = Array.prototype.slice,
@@ -346,9 +346,9 @@ var _cleanerCache = {};
 function _loadCleaner ( name ) {
   var gre, conf;
   if ( name in _cleanerCache ) return _cleanerCache[name];
-  conf = require([CONF_LIB, name, CLEAN_EXT].join(''));
+  conf = require([CLEAN_LIBPATH, name, CLEAN_EXT].join(''));
   (gre = new Gret(conf.source, conf.flags)).replacer = conf.replacer_file
-      ? require([CONF_LIB, conf.replacer_file, REPLACER_EXT].join(''))
+      ? require([CLEAN_LIBPATH, conf.replacer_file, REPLACER_EXT].join(''))
       : _compileReplacer(conf.replacer);
   return _cleanerCache[name] = clean.bind(gre);
 }

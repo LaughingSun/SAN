@@ -1,4 +1,4 @@
-Gret = require('../src/gret/gret.js');
+Gret = require('../src/gret.js');
 
 function stringify ( val, indent ) {
   return JSON.stringify(val, function (err, obj){
