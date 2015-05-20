@@ -26,18 +26,18 @@
  * add: non-native n, s, x and u
  */
 var FLAG_PROP_MAP = {
-      "g": { flag:"g", native: false, name: "global", force: true },
-      "i": { flag:"i", native: true , name: "ignoreCase"},
-      "m": { flag:"m", native: true , name: "multiline"},
-      "n": { flag:"n", native: false, name: "nameOnly" },
-      "s": { flag:"s", native: false, name: "dotAll" },
-      "x": { flag:"x", native: false, name: "extended" },
-      "y": { flag:"y", native: false, name: "sticky" },
-      "u": { flag:"u", native: false, name: "unicode" }
+      "g": { flag:"g", native: false, name: "global", force: true },  // check
+      "i": { flag:"i", native: true , name: "ignoreCase"},            // native
+      "m": { flag:"m", native: true , name: "multiline"},             // native
+      "n": { flag:"n", native: false, name: "nameOnly" },             // check
+      "s": { flag:"s", native: false, name: "dotAll" },               // todo
+      "x": { flag:"x", native: false, name: "extended" },             // todo
+      "y": { flag:"y", native: false, name: "sticky" },               // check
+      "u": { flag:"u", native: false, name: "unicode" }               // todo
     },
     REGEX_FLAGS   = new RegExp(["\\/(\w*)$"].join('')),
     //                                  named      refer      backref                 backref    backref
-    PREP_REGEXP   = /\\(?!k).|(\()(?:\?<(\w+)>|\?P<(\w+)>|\?P=(\w+)\)|(?!\?[:!=]))|\\k<(\w+)>|\\k'(\w+)'/g,
+    PREP_REGEXP   = /\\(?!k).|(\()(?:\?<(\w+)>|\?P<(\w+)>|\?P=(\w+)\)|(?!\?[:!=]))|\\k<(\w+)>|\\k'(\w+)|(\.)'/g,
     //                        backref 0-99             backref   named    named          named
     PREP_REPLACER = /[\$\\](?:((?:0|[1-9]\d?)(?!\d))|\{(\d+)\}|k<(\w+)>|k'(\w+)')|\(\?P=?(\w+)\)/g,
     CONF_LIB = './conf/',
@@ -366,7 +366,7 @@ function Clean ( name, input, options ) {
 var _regexCache = {};
 function _compileSource(source, flags) {
   var key,
-      regex, sticky, nameOnly, chain, namedIndexes,
+      regex, sticky, nameOnly, dotall, chain, namedIndexes,
       ci, pi, m, t;
   if ( source instanceof RegExp ) {
     if ( flags == null )
@@ -381,6 +381,7 @@ function _compileSource(source, flags) {
   
   chain = (sticky = (flags.indexOf('y') >= 0)) ? ['(?:'] : [];
   nameOnly = flags.indexOf('n') >=0;
+  dotall = flags.indexOf('s') >= 0;
   namedIndexes = {};
   ci = 1;
   PREP_REGEXP.lastIndex = pi = 0;
@@ -395,6 +396,8 @@ function _compileSource(source, flags) {
       if ( ! namedIndexes[t] )
         throw new Error(['no such namedIndexes back reference "', t, '"'].join(''));
       chain.push('\\', namedIndexes[t]);
+    } else if ( (t = m[7]) ) {  // if s flag dot replacement
+      chain.push(dotall ? '[^]' : t);
     } else if ( (t = m[1]) ) {  // if n flag basic capture
       if ( nameOnly ) {  // if n flag basic capture
         chain.push('(?:');
